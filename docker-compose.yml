@@ -1,0 +1,47 @@
+services:
+  # PostgreSQL - Base de datos centralizada
+  postgres:
+    image: postgres:15
+    container_name: unified_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: unified_hub
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - unified_network
+
+  # n8n - Automatización de workflows
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: unified_n8n
+    environment:
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: unified_hub
+      DB_POSTGRESDB_USER: admin
+      DB_POSTGRESDB_PASSWORD: admin123
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - postgres
+    networks:
+      - unified_network
+
+volumes:
+  postgres_data:
+  n8n_data:
+
+networks:
+  unified_network:
+    driver: bridge
