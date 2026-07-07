@@ -1,7 +1,7 @@
-# 🔗 Unified Data Hub
+# Unified Data Hub
 
-> Pipeline de integración multi-plataforma con n8n, PostgreSQL y Streamlit. 
-> Centraliza datos de Google Sheets, Notion y Trello en un solo dashboard.
+> Pipeline de integracion multi-plataforma con n8n, PostgreSQL y Streamlit.
+> Centraliza datos de APIs externas (Fake Store API, Airtable, Notion) en un solo dashboard.
 
 ![n8n](https://img.shields.io/badge/n8n-Workflow%20Automation-orange)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
@@ -17,11 +17,11 @@
 - [Problema que Resuelve](#problema-que-resuelve)
 - [Estructura](#estructura)
 - [Prerrequisitos](#prerrequisitos)
-- [Instalación](#instalación)
-- [Configuración de Fuentes](#configuración-de-fuentes)
-- [Uso](#uso)
+- [Instalacion](#instalacion)
+- [Configuracion de Fuentes](#configuracion-de-fuentes)
+- [Pipeline de Datos](#pipeline-de-datos)
 - [Dashboard](#dashboard)
-- [Tecnologías](#tecnologías)
+- [Tecnologias](#tecnologias)
 - [Licencia](#licencia)
 
 ---
@@ -29,35 +29,35 @@
 ## Arquitectura
 
 ```
-Google Sheets ──┐
-Notion ─────────┼──▶ n8n ──▶ PostgreSQL ──▶ Python ──▶ Streamlit Dashboard
-Trello ─────────┘         (Raw Data)      (Transform)   (Visualización)
+Fake Store API --> n8n --> PostgreSQL (raw) --> Python --> PostgreSQL (unified) --> Streamlit
+Airtable     --> n8n --> PostgreSQL (raw) --> transform.py --> PostgreSQL (unified) --> Streamlit
+Notion CRM   --> n8n --> PostgreSQL (raw) -->              --> PostgreSQL (unified) --> Streamlit
 ```
 
-**Flujo de datos:**
+**Flujo de datos (ELT):**
 
-1. **Extract** — n8n se conecta a Google Sheets, Notion y Trello vía APIs
-2. **Load** — n8n guarda los datos crudos en PostgreSQL
-3. **Transform** — Python limpia, normaliza y enriquece los datos
-4. **Visualize** — Streamlit muestra un dashboard unificado e interactivo
+1. **Extract** - n8n se conecta a APIs externas (Fake Store API, Airtable, Notion)
+2. **Load** - n8n guarda los datos crudos en PostgreSQL (products, airtable_data, leads)
+3. **Transform** - Python limpia, normaliza y unifica los datos en unified_data (scripts/transform.py)
+4. **Visualize** - Streamlit muestra un dashboard unificado e interactivo
 
 ---
 
 ## Problema que Resuelve
 
-Las empresas usan múltiples herramientas pero los datos quedan aislados:
+Las empresas usan multiples herramientas pero los datos quedan aislados:
 
-| Antes | Después |
+| Antes | Despues |
 |-------|---------|
-| Datos dispersos en 5+ plataformas | Un solo repositorio centralizado |
-| Reportes manuales que toman horas | Dashboard automático en tiempo real |
-| Errores por copiar y pegar datos | Pipeline automatizado sin intervención |
+| Datos dispersos en 3+ plataformas | Un solo repositorio centralizado |
+| Reportes manuales que toman horas | Dashboard automatico en tiempo real |
+| Errores por copiar y pegar datos | Pipeline automatizado sin intervencion |
 | Cada equipo ve solo su parte | Todos ven el panorama completo |
 
 **Casos de uso:**
-- Unificar leads de ventas, proyectos y tareas en un solo lugar
-- Consolidar métricas de múltiples herramientas de trabajo
-- Automatizar reportes ejecutivos sin intervención manual
+- Unificar catalogo de productos, tareas operativas y pipeline de ventas en un solo lugar
+- Consolidar metricas de multiples herramientas de trabajo
+- Automatizar reportes ejecutivos sin intervencion manual
 
 ---
 
@@ -65,41 +65,35 @@ Las empresas usan múltiples herramientas pero los datos quedan aislados:
 
 ```
 unified-data-hub/
-├── n8n_workflows/          # Flujos de n8n exportados (JSON)
-├── scripts/
-│   ├── __init__.py
-│   ├── transform.py        # Limpieza y normalización
-│   └── load.py             # Carga a PostgreSQL
-├── sql/
-│   └── schema.sql          # Esquema de tablas unificadas
-├── data/
-│   ├── raw/                # Datos crudos (backup)
-│   └── processed/          # Datos limpios
-├── docs/
-│   └── architecture.md     # Decisiones técnicas
-├── images/                 # Capturas de pantalla
-├── README.md
-├── docker-compose.yml      # PostgreSQL + n8n
-├── requirements.txt        # Dependencias Python
-└── app.py                # Dashboard Streamlit
+|-- n8n_workflows/          # Workflows de n8n exportados (JSON)
+|   |-- README.md           # Guia de exportacion/importacion
+|-- scripts/
+|   |-- transform.py        # Transformacion y unificacion de datos
+|-- sql/
+|   |-- schema.sql          # Esquema de tablas (products, airtable_data, leads, unified_data)
+|-- docs/
+|   |-- architecture.md     # Decisiones tecnicas del proyecto
+|-- README.md
+|-- docker-compose.yml      # PostgreSQL + n8n
+|-- requirements.txt        # Dependencias Python
+|-- app.py                  # Dashboard Streamlit
 ```
 
 ---
 
 ## Prerrequisitos
 
-| Herramienta | Versión | Enlace |
+| Herramienta | Version | Enlace |
 |-------------|---------|--------|
 | Docker Desktop | 4.0+ | [Descargar](https://www.docker.com/products/docker-desktop/) |
 | Python | 3.9+ | [Descargar](https://www.python.org/downloads/) |
 | Git | 2.30+ | [Descargar](https://git-scm.com/) |
-| Cuenta Google Cloud | — | Para API de Google Sheets |
-| Cuenta Notion | — | Para integración |
-| Cuenta Trello | — | Para API |
+| Cuenta Airtable | - | Para integracion |
+| Cuenta Notion | - | Para CRM |
 
 ---
 
-## Instalación
+## Instalacion
 
 ### Paso 1: Clonar el repositorio
 
@@ -116,63 +110,77 @@ docker-compose up -d
 
 Servicios que se crean:
 
-| Servicio | Puerto | Descripción |
+| Servicio | Puerto | Descripcion |
 |----------|--------|-------------|
-| PostgreSQL | `5432` | Base de datos centralizada |
-| n8n | `5678` | Editor de workflows |
+| PostgreSQL | 5434 | Base de datos centralizada (mapeado a localhost) |
+| n8n | 5678 | Editor de workflows |
 
-### Paso 3: Acceder a n8n
-
-- URL: http://localhost:5678
-- Configurar cuenta inicial
-
-### Paso 4: Instalar dependencias Python
+### Paso 3: Crear entorno virtual Python
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # macOS/Linux
 # venv\Scripts\activate  # Windows
 
 pip install -r requirements.txt
 ```
 
----
+### Paso 4: Crear tablas en PostgreSQL
 
-## Configuración de Fuentes
+El archivo sql/schema.sql se monta automaticamente en Docker y se ejecuta al iniciar el contenedor por primera vez.
 
-### Google Sheets
+Si necesitas recrear las tablas manualmente:
 
-1. Ir a [Google Cloud Console](https://console.cloud.google.com/)
-2. Crear proyecto → Habilitar Google Sheets API
-3. Crear credenciales (Service Account)
-4. Descargar JSON de credenciales
-5. Configurar en n8n: **Google Sheets → PostgreSQL**
-
-### Notion
-
-1. Ir a [Notion Integrations](https://www.notion.so/my-integrations)
-2. Crear nueva integración
-3. Copiar **Internal Integration Token**
-4. Compartir base de datos con la integración
-5. Configurar en n8n: **Notion → PostgreSQL**
-
-### Trello
-
-1. Ir a [Trello Power-Ups](https://trello.com/power-ups/admin)
-2. Generar **API Key** y **Token**
-3. Configurar en n8n: **Trello → PostgreSQL**
+```bash
+docker exec -i unified_postgres psql -U admin -d unified_hub < sql/schema.sql
+```
 
 ---
 
-## Uso
+## Configuracion de Fuentes
 
-### Ejecutar transformaciones
+### Fake Store API (Demo / Pruebas)
+
+1. En n8n, crea un workflow con un nodo HTTP Request
+2. URL: https://fakestoreapi.com/products
+3. Conecta a un nodo PostgreSQL -> Inserta en tabla products
+4. Mapea los campos: title, price, category, description, image, rating.rate, rating.count
+
+### Airtable (Tareas operativas)
+
+1. Crear base en Airtable llamada "Data Hub Tasks"
+2. Configurar campos: Task, Status, Priority, Assignee, Due Date
+3. Obtener Personal Access Token en airtable.com/create/tokens
+4. Obtener Base ID y Table ID de la URL de la base
+5. En n8n: Airtable -> PostgreSQL (tabla airtable_data)
+
+### Notion CRM (Pipeline de ventas)
+
+1. Crear integracion en notion.so/my-integrations
+2. Crear base "Pipeline de Ventas" con campos: Company, Contact, Email, Status, Deal Value, Source, Assigned To, Last Contact
+3. Conectar integracion a la base
+4. En n8n: Notion -> PostgreSQL (tabla leads)
+
+---
+
+## Pipeline de Datos
+
+### 1. Ingesta con n8n
+
+Ejecutar los workflows de n8n para insertar datos crudos en las tablas respectivas.
+
+### 2. Transformacion con Python
 
 ```bash
 python scripts/transform.py
 ```
 
-### Ejecutar dashboard
+Esto:
+- Lee de products, airtable_data, leads (datos crudos)
+- Limpia, normaliza y unifica los datos
+- Inserta en unified_data (datos unificados)
+
+### 3. Visualizacion con Streamlit
 
 ```bash
 streamlit run app.py
@@ -186,35 +194,36 @@ Acceso: http://localhost:8501
 
 El dashboard incluye:
 
-- **Métricas clave**: Total de registros por fuente
-- **Gráficos de barras**: Comparación entre plataformas
-- **Tabla unificada**: Todos los datos filtrables
-- **Actualización en tiempo real**: Se refresca automáticamente
+- **Metricas clave**: Total de registros por fuente, precio promedio, valor de pipeline
+- **Graficos interactivos**: Precio por categoria, embudo de ventas, tareas por estado
+- **Tablas filtrables**: Productos, tareas, leads con filtros por plataforma
+- **Vista unificada**: Todos los datos en una sola tabla
+- **Auto-refresh**: Opcion de recarga automatica cada 30 segundos
 
 ---
 
-## Tecnologías
+## Tecnologias
 
-| Tecnología | Propósito |
+| Tecnologia | Proposito |
 |------------|-----------|
-| **n8n** | Orquestación visual de integraciones (no-code/low-code) |
-| **PostgreSQL** | Base de datos relacional centralizada |
-| **Python** | Lógica de transformación |
-| **Pandas** | Limpieza y normalización de datos |
-| **SQLAlchemy** | ORM para conexión a PostgreSQL |
-| **Streamlit** | Dashboard interactivo |
-| **Matplotlib** | Visualizaciones estáticas |
-| **Docker** | Contenerización de servicios |
-| **Git** | Control de versiones |
+| n8n | Orquestacion visual de integraciones (no-code/low-code) |
+| PostgreSQL | Base de datos relacional centralizada |
+| Python | Logica de transformacion y limpieza |
+| Pandas | Manipulacion y normalizacion de datos |
+| SQLAlchemy | ORM para conexion a PostgreSQL |
+| Streamlit | Dashboard interactivo |
+| Matplotlib | Visualizaciones estaticas |
+| Docker | Contenerizacion de servicios |
+| Git | Control de versiones |
 
 ---
 
 ## Licencia
 
-MIT License — Proyecto educativo para portafolio de Data Engineering.
+MIT License - Proyecto educativo para portafolio de Data Engineering.
 
 ---
 
 ## Autor
 
-**Ivifer Pita** — [LinkedIn](https://www.linkedin.com/in/ivifer-pita-322527380/) — [GitHub](https://github.com/Ivifer1?tab=repositories)
+Ivifer Pita - [LinkedIn](https://www.linkedin.com/in/ivifer-pita-322527380/) - [GitHub](https://github.com/Ivifer1?tab=repositories)
