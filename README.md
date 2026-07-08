@@ -73,6 +73,7 @@ unified-data-hub/
 |   |-- schema.sql          # Esquema de tablas (products, airtable_data, leads, unified_data)
 |-- docs/
 |   |-- architecture.md     # Decisiones tecnicas del proyecto
+|   |-- images/             # Capturas de pantalla del dashboard
 |-- README.md
 |-- docker-compose.yml      # PostgreSQL + n8n
 |-- requirements.txt        # Dependencias Python
@@ -199,6 +200,32 @@ El dashboard incluye:
 - **Tablas filtrables**: Productos, tareas, leads con filtros por plataforma
 - **Vista unificada**: Todos los datos en una sola tabla
 - **Auto-refresh**: Opcion de recarga automatica cada 30 segundos
+
+> **Nota:** Para que las imagenes se rendericen correctamente en GitHub, guarda las capturas en la carpeta `docs/images/` con los nombres indicados abajo.
+
+### Metricas Unificadas y Productos (Fake Store API)
+
+Vista general con KPIs consolidados y analisis detallado del catalogo de productos.
+
+![Metricas Unificadas y Productos](docs/images/dashboard-unified-metrics.png)
+
+### CRM - Pipeline de Ventas (Notion)
+
+Seguimiento del embudo de ventas, distribucion de leads por estado y canal de origen.
+
+![CRM Pipeline de Ventas](docs/images/dashboard-crm-pipeline.png)
+
+### Top 5 Oportunidades por Valor
+
+Ranking de las oportunidades de mayor valor dentro del pipeline comercial.
+
+![Top 5 Oportunidades](docs/images/dashboard-top-opportunities.png)
+
+### Tareas Operativas (Airtable)
+
+Panel de control de tareas con distribucion por estado y prioridad.
+
+![Tareas Airtable](docs/images/dashboard-airtable-tasks.png)
 
 ---
 
